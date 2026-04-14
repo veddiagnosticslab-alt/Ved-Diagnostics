@@ -101,37 +101,42 @@
         // *** APNA APPS SCRIPT URL YAHAN DALEIN ***
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxlioRoB-ZKSzJbCF5go11c0A1qqSYwOZ3Ly9kSmNjlcIYH0-HYg1fy_Ufin2ZFRWpfPw/exec";
 
-        // 1. Data load karne ka function
         async function fetchRecords() {
-            try {
-                const response = await fetch(SCRIPT_URL);
-                const data = await response.json();
-                const tbody = document.getElementById('tableBody');
-                tbody.innerHTML = '';
-                
-                if (data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Abhi tak koi record nahi hai.</td></tr>';
-                    return;
-                }
-
-                data.reverse().forEach(item => {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${item.billDate}</td>
-                            <td><b>${item.id}</b></td>
-                            <td>${item.patientInfo}</td>
-                            <td>${item.referral || 'Self'}</td>
-                            <td>${item.tests}</td>
-                            <td>₹${item.amount}</td>
-                            <td><span class="status-inactive">${item.status}</span></td>
-                        </tr>`;
-                });
-            } catch (err) {
-                console.error(err);
-                document.getElementById('tableBody').innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">Data load nahi ho paya. Script settings check karein.</td></tr>';
-            }
+    const tbody = document.getElementById('tableBody');
+    try {
+        // Google Script se data fetch karna
+        const response = await fetch(SCRIPT_URL);
+        
+        if (!response.ok) throw new Error('Network response was not ok');
+        
+        const data = await response.json();
+        tbody.innerHTML = '';
+        
+        if (data && data.length > 0) {
+            data.reverse().forEach(item => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${item.billDate}</td>
+                        <td><b>${item.id}</b></td>
+                        <td>${item.patientInfo}</td>
+                        <td>${item.referral || 'Self'}</td>
+                        <td>${item.tests}</td>
+                        <td>₹${item.amount}</td>
+                        <td><span class="status-inactive">${item.status}</span></td>
+                    </tr>`;
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No records found.</td></tr>';
         }
-
+    } catch (err) {
+        console.error("Fetch Error:", err);
+        // Agar fir bhi CORS aaye, toh user ko ek clear message dikhana
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">
+            Data load nahi ho raha. Ek baar Script URL check karein ya 
+            Apps Script mein 'Anyone' access verify karein.
+        </td></tr>`;
+    }
+}
         // 2. Modal Functions
         function openModal() {
             document.getElementById('entryModal').style.display = "block";
