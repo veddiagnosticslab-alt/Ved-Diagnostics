@@ -1,1 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lab Management Dashboard</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; padding: 20px; }
+        .container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #0056b3; color: white; padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #ddd; font-size: 14px; }
+        .status-chip { padding: 5px 10px; border-radius: 15px; font-size: 12px; font-weight: bold; }
+        .completed { background: #e6fffa; color: #2d3748; border: 1px solid #38b2ac; }
+        .pending { background: #fffaf0; color: #744210; border: 1px solid #ed8936; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Ved Diagnostics - Patient Records</h2>
+        <table id="labTable">
+            <thead>
+                <tr>
+                    <th>Bill Date</th>
+                    <th>ID</th>
+                    <th>Patient Info</th>
+                    <th>Referral</th>
+                    <th>Tests</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                </tbody>
+        </table>
+    </div>
 
+    <script>
+        const scriptUrl = 'https://script.google.com/macros/s/AKfycbwpC17LX68j__KAh2T8SEzZUfno2ejodQ8U8MC6fG44CdpAoN9bvvCvI-zMaX2uxZedPg/exec';
+
+        async function loadData() {
+            const response = await fetch(scriptUrl);
+            const data = await response.json();
+            const tbody = document.getElementById('tableBody');
+            
+            data.forEach(item => {
+                const row = `<tr>
+                    <td>${item.billDate}</td>
+                    <td>${item.id}</td>
+                    <td>${item.patientInfo}</td>
+                    <td>${item.referral}</td>
+                    <td>${item.tests}</td>
+                    <td>₹${item.amount}</td>
+                    <td><span class="status-chip ${item.status.toLowerCase()}">${item.status}</span></td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+        loadData();
+    </script>
+</body>
+</html>
