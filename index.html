@@ -1,188 +1,141 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ved Diagnostics - Dashboard</title>
-    <style>
-        :root { --primary: #0056b3; --success: #28a745; --bg: #f8f9fa; --text: #333; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text); }
-        
-        /* Header */
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .btn-new { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn-new:hover { background: #004494; }
-        
-        /* Dashboard Table */
-        .table-container { background: white; border-radius: 12px; overflow-x: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-        table { width: 100%; border-collapse: collapse; min-width: 900px; }
-        th { background: #f1f4f9; padding: 15px; text-align: left; font-size: 13px; text-transform: uppercase; color: #555; border-bottom: 2px solid #e0e0e0; }
-        td { padding: 15px; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
-        tr:hover { background-color: #fcfcfc; }
-        .status-inactive { color: #888; background: #eee; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
-        .patient-id { font-weight: bold; color: var(--primary); }
-
-        /* Pop-up Modal */
-        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); }
-        .modal-content { background: white; margin: 2% auto; padding: 30px; width: 90%; max-width: 500px; border-radius: 15px; position: relative; animation: slideDown 0.3s ease; }
-        @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .close { position: absolute; right: 20px; top: 15px; font-size: 28px; cursor: pointer; color: #aaa; }
-        
-        /* Form */
-        .form-group { margin-bottom: 18px; }
-        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
-        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
-        input[readonly] { background: #f9f9f9; color: #777; }
-        .submit-btn { width: 100%; padding: 14px; background: var(--success); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; }
-    </style>
+  <base target="_top">
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+    .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    h2 { text-align: center; color: #333; }
+    
+    /* Button Styles */
+    .btn { background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-bottom: 20px; }
+    .btn:hover { background-color: #0056b3; }
+    .btn-submit { background-color: #28a745; width: 100%; margin-top: 10px; }
+    .btn-submit:hover { background-color: #218838; }
+    
+    /* Form Styles */
+    #formContainer { display: none; background: #f9f9f9; padding: 20px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 30px; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; }
+    input[type="text"], input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    
+    /* Table Styles */
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+    th { background-color: #007bff; color: white; }
+    tr:hover { background-color: #f1f1f1; }
+    .status-pending { color: #856404; background-color: #fff3cd; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; }
+    
+    #loader { display: none; text-align: center; margin: 20px 0; font-weight: bold; color: #007bff; }
+  </style>
 </head>
 <body>
 
-    <div class="header">
-        <h2 style="margin:0; color:var(--primary);">Ved Diagnostics Dashboard</h2>
-        <button class="btn-new" onclick="openModal()">+ New Entry</button>
-    </div>
+<div class="container">
+  <h2>Lab Records Dashboard</h2>
+  
+  <button class="btn" onclick="toggleForm()">+ New Entry</button>
+  
+  <div id="formContainer">
+    <form id="recordForm" onsubmit="handleFormSubmit(event)">
+      <div class="form-group">
+        <label>Patient Info (Name, Age, etc.):</label>
+        <input type="text" name="patientInfo" required placeholder="e.g., Ramesh Kumar, 45, M">
+      </div>
+      <div class="form-group">
+        <label>Referral (Doctor/Self):</label>
+        <input type="text" name="referral" required placeholder="Dr. Sharma / Self">
+      </div>
+      <div class="form-group">
+        <label>Tests (Comma separated):</label>
+        <input type="text" name="tests" required placeholder="e.g., CBC, KFT, Blood Sugar">
+      </div>
+      <div class="form-group">
+        <label>Amount (₹):</label>
+        <input type="number" name="amount" required placeholder="500">
+      </div>
+      <button type="submit" class="btn btn-submit">Save Record</button>
+    </form>
+  </div>
 
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Bill Date</th>
-                    <th>ID</th>
-                    <th>Patient Info</th>
-                    <th>Referral</th>
-                    <th>Tests</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-                <tr><td colspan="7" style="text-align:center; padding: 40px;">Data load ho raha hai...</td></tr>
-            </tbody>
-        </table>
-    </div>
+  <div id="loader">Processing data... Please wait.</div>
 
-    <div id="entryModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h3 style="margin-top:0; color: var(--primary);">New Patient Entry</h3>
-            <hr style="border: 0; border-top: 1px solid #eee; margin-bottom: 20px;">
-            <form id="labForm">
-                <div class="form-group">
-                    <label>Bill Date</label>
-                    <input type="text" id="billDate" name="billDate" readonly>
-                </div>
-                <div class="form-group">
-                    <label>Generated ID</label>
-                    <input type="text" id="patientId" name="id" readonly>
-                </div>
-                <div class="form-group">
-                    <label>Patient Info</label>
-                    <input type="text" id="patientInfo" placeholder="Name, Age, Gender" required>
-                </div>
-                <div class="form-group">
-                    <label>Referral By</label>
-                    <input type="text" id="referral" placeholder="Self / Hospital Name">
-                </div>
-                <div class="form-group">
-                    <label>Tests</label>
-                    <input type="text" id="tests" placeholder="CBC, LFT, etc." required>
-                </div>
-                <div class="form-group">
-                    <label>Amount (₹)</label>
-                    <input type="number" id="amount" required>
-                </div>
-                <button type="submit" class="submit-btn" id="saveBtn">Save Record</button>
-            </form>
-        </div>
-    </div>
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>Bill Date</th>
+        <th>ID</th>
+        <th>Patient Info</th>
+        <th>Referral</th>
+        <th>Tests</th>
+        <th>Amount</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody">
+      </tbody>
+  </table>
+</div>
 
-    <script>
-        // *** APNA APPS SCRIPT URL YAHAN DALEIN ***
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwpC17LX68j__KAh2T8SEzZUfno2ejodQ8U8MC6fG44CdpAoN9bvvCvI-zMaX2uxZedPg/exec";
+<script>
+  // Load data when page loads
+  document.addEventListener('DOMContentLoaded', loadData);
 
-        // 1. Data Fetch & Display
-        async function fetchRecords() {
-            try {
-                const response = await fetch(SCRIPT_URL);
-                const data = await response.json();
-                const tbody = document.getElementById('tableBody');
-                tbody.innerHTML = '';
-                
-                data.reverse().forEach(item => {
-                    // Date Format Fix
-                    let displayDate = item.billDate;
-                    if(item.billDate.includes('T')) {
-                        const d = new Date(item.billDate);
-                        displayDate = d.toLocaleDateString('en-GB') + " " + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    }
+  function toggleForm() {
+    var form = document.getElementById("formContainer");
+    if (form.style.display === "none" || form.style.display === "") {
+      form.style.display = "block";
+    } else {
+      form.style.display = "none";
+    }
+  }
 
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${displayDate}</td>
-                            <td class="patient-id">${item.id}</td>
-                            <td style="text-transform: capitalize;">${item.patientInfo}</td>
-                            <td style="text-transform: uppercase;">${item.referral || 'Self'}</td>
-                            <td>${item.tests}</td>
-                            <td>₹${item.amount}</td>
-                            <td><span class="status-inactive">${item.status}</span></td>
-                        </tr>`;
-                });
-            } catch (err) {
-                document.getElementById('tableBody').innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">Connection Error!</td></tr>';
+  function handleFormSubmit(event) {
+    event.preventDefault();
+    document.getElementById('loader').style.display = "block";
+    
+    var form = document.getElementById('recordForm');
+    
+    // Call Apps Script function
+    google.script.run
+      .withSuccessHandler(function(response) {
+        form.reset();
+        form.style.display = "none"; // Hide form after saving
+        loadData(); // Reload table data
+      })
+      .processForm(form);
+  }
+
+  function loadData() {
+    document.getElementById('loader').style.display = "block";
+    google.script.run
+      .withSuccessHandler(function(dataArray) {
+        var tbody = document.getElementById('tableBody');
+        tbody.innerHTML = ''; // Clear existing rows
+        
+        dataArray.forEach(function(row) {
+          var tr = document.createElement('tr');
+          
+          // Row layout: Date, ID, Patient, Referral, Tests, Amount, Status
+          row.forEach(function(cellData, index) {
+            var td = document.createElement('td');
+            
+            // Apply styling for status column (index 6)
+            if (index === 6) {
+              td.innerHTML = '<span class="status-pending">' + cellData + '</span>';
+            } else {
+              td.textContent = cellData;
             }
-        }
-
-        // 2. Modal Functions
-        function openModal() {
-            document.getElementById('entryModal').style.display = "block";
-            const now = new Date();
-            // Form display ke liye sundar date
-            const dateStr = now.toLocaleDateString('en-GB') + " " + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            document.getElementById('billDate').value = dateStr;
-            document.getElementById('patientId').value = "VED" + now.getDate() + (now.getMonth()+1) + Math.floor(100 + Math.random() * 900);
-        }
-
-        function closeModal() {
-            document.getElementById('entryModal').style.display = "none";
-            document.getElementById('labForm').reset();
-        }
-
-        // 3. Form Submit Logic
-        document.getElementById('labForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const btn = document.getElementById('saveBtn');
-            btn.innerText = "Saving...";
-            btn.disabled = true;
-
-            const payload = {
-                billDate: document.getElementById('billDate').value,
-                id: document.getElementById('patientId').value,
-                patientInfo: document.getElementById('patientInfo').value,
-                referral: document.getElementById('referral').value,
-                tests: document.getElementById('tests').value,
-                amount: document.getElementById('amount').value
-            };
-
-            // Use 'no-cors' for POST to avoid preflight issues
-            fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify(payload)
-            }).then(() => {
-                alert("Entry Saved!");
-                closeModal();
-                setTimeout(fetchRecords, 1500); // 1.5s wait to let Sheet update
-            }).catch(err => {
-                alert("Error!");
-                console.error(err);
-            }).finally(() => {
-                btn.innerText = "Save Record";
-                btn.disabled = false;
-            });
+            tr.appendChild(td);
+          });
+          
+          tbody.appendChild(tr);
         });
+        document.getElementById('loader').style.display = "none";
+      })
+      .getSheetData();
+  }
+</script>
 
-        window.onload = fetchRecords;
-    </script>
 </body>
 </html>
